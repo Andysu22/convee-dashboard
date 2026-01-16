@@ -1,0 +1,10 @@
+tunnel: eyJ6b25lSUQiOiIxZDRkNTVlOTc2ZDA2ZGQxZjIxZDU1YWE2ZDBiOTUwYSIsImFjY291bnRJRCI6ImQ2Mzk0NjEwZjk5OGEwZDRlOGVhZTQzMzQ5YjFhNWM4IiwiYXBpVG9rZW4iOiJzUEJMLW9vQjc4M3IwWWJJVDIxdC1qZGJpMGg1ZjFQYmU5VnQzUTJSIn0=
+credentials-file: C:\Users\andre\.cloudflared\f3a88655-6c62-4240-af33-e135506679b9.json
+
+ingress:
+  # Regel: Wenn jemand admin-pnl aufruft -> leite an lokales React weiter
+  - hostname: admin-pnl.convee.de
+    service: http://localhost:5173
+  
+  # Alles andere -> Fehler 404
+  - service: http_status:404
