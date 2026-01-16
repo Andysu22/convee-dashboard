@@ -1,65 +1,117 @@
 import { useState } from 'react';
-import { readMe } from '@directus/sdk'; // <--- WICHTIG: readMe muss hier importiert sein!
+import { readMe } from '@directus/sdk'; 
 import client from './directus';
+import { 
+  Box, 
+  Button, 
+  Container, 
+  TextField, 
+  Typography, 
+  Card, 
+  CardContent, 
+  Alert,
+  CircularProgress
+} from '@mui/material';
 
 export default function Login({ onLoginSuccess }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleLogin = async (e) => {
     e.preventDefault();
     setError('');
+    setIsLoading(true);
 
     try {
-      // 1. FIX: Email und Passwort als OBJEKT übergeben
+      // 1. Login durchführen (Deine funktionierende Syntax)
       await client.login({ email, password });
       
-      // 2. User-Daten laden (mit der importierten readMe Funktion)
-      const user = await client.request(readMe());
+      // 2. Session-Startzeit speichern (für den 6h Timer in directus.js)
+      window.localStorage.setItem('convee_session_start', Date.now());
+
+      // 3. Kurz prüfen, ob Token wirklich geht
+      await client.request(readMe());
       
-      console.log("Erfolgreich eingeloggt als:", user);
       onLoginSuccess(); 
 
     } catch (err) {
-      console.error("Login Fehler:", err);
-      setError('Login fehlgeschlagen. Bitte E-Mail und Passwort prüfen.');
+      console.error(err);
+      setError('Anmeldung fehlgeschlagen. Bitte Daten prüfen.');
+      // Aufräumen falls Login halb fehlgeschlagen
+      window.localStorage.removeItem('convee_session_start');
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <div style={{ display: 'flex', justifyContent: 'center', marginTop: '50px' }}>
-      <form onSubmit={handleLogin} style={{ padding: '20px', border: '1px solid #ccc', borderRadius: '8px', minWidth: '300px' }}>
-        <h2>Dashboard Login</h2>
-        
-        {error && <p style={{ color: 'red', marginBottom: '10px' }}>{error}</p>}
+    <Box sx={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: 'background.default' }}>
+      <Container maxWidth="xs">
+        <Card elevation={0} sx={{ borderRadius: 1, border: '1px solid', borderColor: 'divider' }}>
+          <CardContent sx={{ p: 4 }}>
+            <Box sx={{ mb: 4, textAlign: 'center' }}>
+              <Typography variant="h5" component="h1" fontWeight="700" gutterBottom sx={{ color: '#0f172a', letterSpacing: '-0.5px' }}>
+                Convee Admin
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Bitte melden Sie sich an
+              </Typography>
+            </Box>
 
-        <div style={{ marginBottom: '15px' }}>
-          <label style={{display: 'block', marginBottom: '5px'}}>Email:</label>
-          <input 
-            type="email" 
-            value={email} 
-            onChange={(e) => setEmail(e.target.value)} 
-            required 
-            style={{ width: '100%', padding: '8px', boxSizing: 'border-box' }}
-          />
-        </div>
+            {error && <Alert severity="error" sx={{ mb: 3, borderRadius: 1 }}>{error}</Alert>}
 
-        <div style={{ marginBottom: '20px' }}>
-          <label style={{display: 'block', marginBottom: '5px'}}>Passwort:</label>
-          <input 
-            type="password" 
-            value={password} 
-            onChange={(e) => setPassword(e.target.value)} 
-            required 
-            style={{ width: '100%', padding: '8px', boxSizing: 'border-box' }}
-          />
-        </div>
+            <form onSubmit={handleLogin}>
+              <TextField
+                label="E-Mail Adresse"
+                type="email"
+                fullWidth
+                margin="normal"
+                variant="outlined"
+                size="small"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                InputProps={{ sx: { borderRadius: 1 } }} 
+              />
+              
+              <TextField
+                label="Passwort"
+                type="password"
+                fullWidth
+                margin="normal"
+                variant="outlined"
+                size="small"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                InputProps={{ sx: { borderRadius: 1 } }}
+              />
 
-        <button type="submit" style={{ width: '100%', padding: '10px', cursor: 'pointer', background: '#333', color: '#fff', border: 'none', borderRadius: '4px' }}>
-          Anmelden
-        </button>
-      </form>
-    </div>
+              <Button 
+                type="submit" 
+                fullWidth 
+                variant="contained" 
+                disableElevation
+                disabled={isLoading}
+                sx={{ 
+                  mt: 3, 
+                  mb: 1, 
+                  height: 44, 
+                  fontWeight: 600, 
+                  bgcolor: '#0f172a', 
+                  borderRadius: 1,
+                  textTransform: 'none',
+                  '&:hover': { bgcolor: '#1e293b' }
+                }}
+              >
+                {isLoading ? <CircularProgress size={24} color="inherit" /> : 'Anmelden'}
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+      </Container>
+    </Box>
   );
 }
